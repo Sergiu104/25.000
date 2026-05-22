@@ -1,0 +1,49 @@
+name: Generate Food Catalog
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: Maximum number of foods to export
+        required: true
+        default: "25000"
+      prefer_country:
+        description: Preferred country text/tag
+        required: true
+        default: romania
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate JSONL catalog
+        run: |
+          python tools/generate_openfoodfacts_catalog.py \
+            --limit "${{ github.event.inputs.limit }}" \
+            --prefer-country "${{ github.event.inputs.prefer_country }}" \
+            --output iv_food_catalog_ro.jsonl
+
+      - name: Show catalog size
+        run: |
+          wc -l iv_food_catalog_ro.jsonl
+          du -h iv_food_catalog_ro.jsonl
+          head -n 5 iv_food_catalog_ro.jsonl
+
+      - name: Commit generated catalog
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Generate IronVexel food catalog
+          file_pattern: iv_food_catalog_ro.jsonl
