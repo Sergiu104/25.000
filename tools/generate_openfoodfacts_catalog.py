@@ -25,6 +25,16 @@ CODE_KEYS = ("code", "id", "barcode")
 COUNTRY_KEYS = ("countries_tags", "countries_en", "countries")
 
 
+def raise_csv_field_limit() -> None:
+    limit = sys.maxsize
+    while True:
+        try:
+            csv.field_size_limit(limit)
+            return
+        except OverflowError:
+            limit = int(limit / 10)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", default=DEFAULT_URL)
@@ -36,6 +46,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def rows_from_openfoodfacts(url: str, timeout: int) -> Iterator[Dict[str, Any]]:
+    raise_csv_field_limit()
     req = urllib.request.Request(url, headers={"User-Agent": "IronVexelCatalogGenerator/0.1"})
     with urllib.request.urlopen(req, timeout=timeout) as response:
         with gzip.GzipFile(fileobj=response) as gz:
