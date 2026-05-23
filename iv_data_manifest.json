@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "2026.05.23.1",
+  "app": "IronVexel",
+  "files": {
+    "foods": {
+      "path": "iv_food_catalog_ro.jsonl",
+      "format": "jsonl",
+      "maxItems": 25000
+    },
+    "exercises": {
+      "path": "iv_exercise_catalog_ro_en.jsonl",
+      "format": "jsonl",
+      "seedItems": 51,
+      "targetItems": 2000
+    },
+    "trainingPrograms": {
+      "path": "iv_training_programs_ro_en.jsonl",
+      "format": "jsonl",
+      "seedItems": 6
+    }
+  }
+}
