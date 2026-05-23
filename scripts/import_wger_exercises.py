@@ -96,6 +96,51 @@ def get_name(value: Any) -> str:
     return str(value or "").strip()
 
 
+def get_translation_language_id(translation: dict[str, Any]) -> int | None:
+    language = translation.get("language")
+    if isinstance(language, int):
+        return language
+    if isinstance(language, dict):
+        raw_id = language.get("id")
+        if isinstance(raw_id, int):
+            return raw_id
+        if isinstance(raw_id, str) and raw_id.isdigit():
+            return int(raw_id)
+    return None
+
+
+def pick_translation(item: dict[str, Any], preferred_language: int = DEFAULT_LANGUAGE) -> dict[str, Any] | None:
+    translations = item.get("translations") or []
+    if not isinstance(translations, list) or not translations:
+        return None
+
+    approved_translations = [t for t in translations if isinstance(t, dict) and t.get("name")]
+    if not approved_translations:
+        return None
+
+    for translation in approved_translations:
+        if get_translation_language_id(translation) == preferred_language:
+            return translation
+
+    for translation in approved_translations:
+        if get_translation_language_id(translation) == DEFAULT_LANGUAGE:
+            return translation
+
+    return approved_translations[0]
+
+
+def get_exercise_name(item: dict[str, Any]) -> str:
+    direct_name = clean_text(str(item.get("name") or ""))
+    if direct_name:
+        return direct_name
+
+    translation = pick_translation(item)
+    if translation:
+        return clean_text(str(translation.get("name") or ""))
+
+    return ""
+
+
 def pick_equipment(item: dict[str, Any]) -> str:
     equipment = item.get("equipment") or []
     if isinstance(equipment, list) and equipment:
@@ -133,24 +178,24 @@ def pick_muscle_group(item: dict[str, Any]) -> str:
     return "Other"
 
 
-def pick_movement_pattern(item: dict[str, Any], muscle_group: str, equipment: str) -> str:
+def pick_movement_pattern(item: dict[str, Any], name: str, muscle_group: str, equipment: str) -> str:
     category_name = pick_category_name(item)
     if category_name in CATEGORY_TO_PATTERN:
         return CATEGORY_TO_PATTERN[category_name]
 
-    name = str(item.get("name") or "").lower()
+    lowered_name = name.lower()
 
-    if any(word in name for word in ["squat", "lunge", "leg press"]):
+    if any(word in lowered_name for word in ["squat", "lunge", "leg press"]):
         return "Squat"
-    if any(word in name for word in ["deadlift", "hip thrust", "good morning"]):
+    if any(word in lowered_name for word in ["deadlift", "hip thrust", "good morning"]):
         return "Hinge"
-    if any(word in name for word in ["row", "pull", "pulldown", "chin-up"]):
+    if any(word in lowered_name for word in ["row", "pull", "pulldown", "chin-up"]):
         return "Pull"
-    if any(word in name for word in ["press", "push-up", "pushup"]):
+    if any(word in lowered_name for word in ["press", "push-up", "pushup"]):
         if muscle_group == "Shoulders":
             return "VerticalPush"
         return "HorizontalPush"
-    if any(word in name for word in ["curl", "extension", "raise", "fly"]):
+    if any(word in lowered_name for word in ["curl", "extension", "raise", "fly"]):
         return "Isolation"
     if muscle_group == "Core":
         return "Core"
@@ -159,11 +204,13 @@ def pick_movement_pattern(item: dict[str, Any], muscle_group: str, equipment: st
     return "Other"
 
 
-def pick_level(item: dict[str, Any]) -> str:
-    name = str(item.get("name") or "").lower()
-    if any(word in name for word in ["advanced", "one arm", "one-arm", "pistol", "muscle-up"]):
+def pick_level(name: str, equipment: str) -> str:
+    lowered_name = name.lower()
+    if any(word in lowered_name for word in ["advanced", "one arm", "one-arm", "pistol", "muscle-up"]):
         return "Advanced"
-    if any(word in name for word in ["beginner", "assisted", "machine"]):
+    if any(word in lowered_name for word in ["beginner", "assisted"]):
+        return "Beginner"
+    if equipment == "Machine":
         return "Beginner"
     return "Intermediate"
 
@@ -202,7 +249,7 @@ def build_tags(item: dict[str, Any], muscle_group: str, equipment: str, pattern:
 
 
 def normalize_item(item: dict[str, Any]) -> dict[str, str] | None:
-    name = clean_text(str(item.get("name") or ""))
+    name = get_exercise_name(item)
     if not name:
         return None
 
@@ -211,8 +258,8 @@ def normalize_item(item: dict[str, Any]) -> dict[str, str] | None:
 
     muscle_group = pick_muscle_group(item)
     equipment = pick_equipment(item)
-    movement_pattern = pick_movement_pattern(item, muscle_group, equipment)
-    level = pick_level(item)
+    movement_pattern = pick_movement_pattern(item, name, muscle_group, equipment)
+    level = pick_level(name, equipment)
     default_sets, reps_min, reps_max, rest_seconds = pick_reps_and_rest(muscle_group, movement_pattern, level)
 
     return {
