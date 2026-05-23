@@ -1,0 +1,35 @@
+name: Generate Recipe Catalog
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate recipe catalog
+        run: python tools/generate_recipe_catalog.py --output recipe_catalog_ro.jsonl
+
+      - name: Show catalog preview
+        run: |
+          wc -l recipe_catalog_ro.jsonl
+          head -n 5 recipe_catalog_ro.jsonl
+
+      - name: Commit generated recipe catalog
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Generate IronVexel recipe catalog
+          file_pattern: recipe_catalog_ro.jsonl
