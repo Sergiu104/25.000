@@ -1,0 +1,3 @@
+id;name;muscleGroup;equipment;movementPattern;level;goals;defaultSets;repsMin;repsMax;restSeconds;tags;alternatives
+pushup;Flotări;Chest;Bodyweight;HorizontalPush;Beginner;FatLoss|Definition|MuscleGain|Fitness;3;10;20;60;bodyweight|push|home;machine-chest-press|db-bench-press
+bodyweight-squat;Genuflexiuni cu greutatea corpului;Legs;Bodyweight;Squat;Beginner;FatLoss|Definition|MuscleGain|Fitness;3;12;20;75;bodyweight|legs|home;leg-press|goblet-squat
