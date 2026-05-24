@@ -1,0 +1,58 @@
+{
+  "manifestVersion": 1,
+  "app": "IronVexel",
+  "repository": "Sergiu104/25.000",
+  "updatedAt": "2026-05-24",
+  "environment": "backup-public-catalog",
+  "catalogs": {
+    "foods": {
+      "enabled": true,
+      "id": "iv-food-catalog-ro",
+      "file": "iv_food_catalog_ro.jsonl",
+      "format": "jsonl",
+      "schemaVersion": "iv.food.v1",
+      "rawUrl": "https://raw.githubusercontent.com/Sergiu104/25.000/main/iv_food_catalog_ro.jsonl",
+      "maxItems": 25000,
+      "nutritionBase": "per_100g",
+      "requiredFields": ["id", "name", "calories", "protein", "carbs", "fat"],
+      "optionalFields": ["brand", "barcode", "category", "servingGrams", "aliases", "source"],
+      "dedupeKeys": ["id", "barcode", "normalizedName"],
+      "allowZeroCaloriesOnlyFor": ["apa", "water"],
+      "locale": "ro-RO"
+    },
+    "recipes": {
+      "enabled": true,
+      "id": "iv-recipe-catalog-ro",
+      "file": "iv_recipe_catalog_ro.jsonl",
+      "format": "jsonl",
+      "schemaVersion": "iv.recipe.v1",
+      "rawUrl": "https://raw.githubusercontent.com/Sergiu104/25.000/main/iv_recipe_catalog_ro.jsonl",
+      "maxItems": 5000,
+      "nutritionBase": "per_recipe_serving",
+      "requiredFields": ["id", "name", "servings", "ingredients", "instructions", "nutrition"],
+      "optionalFields": ["tags", "difficulty", "prepMinutes", "cookMinutes", "source"],
+      "dedupeKeys": ["id", "normalizedName"],
+      "locale": "ro-RO"
+    }
+  },
+  "importRules": {
+    "mode": "safe_replace_when_version_changes",
+    "batchSize": 500,
+    "maxInvalidRowsBeforeAbort": 100,
+    "skipInvalidRows": true,
+    "trimStrings": true,
+    "normalizeDiacriticsForSearch": true,
+    "keepOriginalNames": true,
+    "preferLocalItemsOverRemoteDuplicates": true,
+    "cacheOffline": true,
+    "validateJsonPerLine": true,
+    "emptyCatalogBehavior": "keep_existing_local_data"
+  },
+  "virtualFridgeRules": {
+    "matchIngredientsBy": ["foodId", "barcode", "normalizedName", "name"],
+    "allowPartialRecipeMatch": true,
+    "minimumIngredientMatchRatio": 0.6,
+    "subtractConsumedIngredients": true,
+    "addConsumedRecipeToFoodLog": true
+  }
+}
