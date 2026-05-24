@@ -1,0 +1,40 @@
+name: Generate recipe catalog
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/generate_recipe_catalog_500.py'
+      - '.github/workflows/generate-recipes.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-recipes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate 500 recipe catalog
+        run: python tools/generate_recipe_catalog_500.py --output recipe_catalog_ro.jsonl
+
+      - name: Verify recipe count
+        run: |
+          count=$(wc -l < recipe_catalog_ro.jsonl)
+          echo "Recipe count: $count"
+          test "$count" -eq 500
+
+      - name: Commit generated recipe catalog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add recipe_catalog_ro.jsonl
+          git diff --cached --quiet && echo "No recipe changes to commit" || git commit -m "Generate 500 IronVexel recipes"
+          git push
