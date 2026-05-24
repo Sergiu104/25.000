@@ -1,10 +1,49 @@
-# IronVexel Food Catalog
+# IronVexel Food & Recipe Catalog
 
-Repo separat pentru catalogul mare de alimente IronVexel.
+Repo separat pentru catalogul mare de alimente si retete IronVexel.
 
-## Fișierul principal
+Scopul repo-ului:
 
-Aplicația IronVexel așteaptă un fișier JSONL compact:
+- tine backup public pentru baza mare de alimente;
+- ofera fisiere raw usor de descarcat de aplicatia Android;
+- separa datele grele de repo-ul principal IronVexel;
+- permite update la catalog fara rebuild complet al aplicatiei.
+
+## Fisiere principale
+
+Aplicatia IronVexel poate citi urmatoarele fisiere:
+
+```text
+iv_import_settings.json
+iv_food_catalog_ro.jsonl
+iv_recipe_catalog_ro.jsonl
+```
+
+### 1. Import settings
+
+```text
+iv_import_settings.json
+```
+
+Acesta este manifestul central. Contine URL-urile raw, versiunile de schema, limitele si regulile de import pentru alimente si retete.
+
+Raw URL:
+
+```text
+https://raw.githubusercontent.com/Sergiu104/25.000/main/iv_import_settings.json
+```
+
+In aplicatia IronVexel, recomandat in `local.properties`:
+
+```properties
+FOOD_IMPORT_SETTINGS_URL=https://raw.githubusercontent.com/Sergiu104/25.000/main/iv_import_settings.json
+FOOD_CATALOG_URL=https://raw.githubusercontent.com/Sergiu104/25.000/main/iv_food_catalog_ro.jsonl
+RECIPE_CATALOG_URL=https://raw.githubusercontent.com/Sergiu104/25.000/main/iv_recipe_catalog_ro.jsonl
+```
+
+## Catalog alimente
+
+Fisier:
 
 ```text
 iv_food_catalog_ro.jsonl
@@ -19,33 +58,62 @@ Format pe fiecare linie:
 Reguli:
 
 - un aliment pe linie;
-- valori nutriționale per 100g;
-- `calories` poate fi `0` pentru apă;
-- fără array JSON mare;
-- fără CSV în aplicație;
-- recomandat: maximum 25.000 alimente pentru MVP.
+- valori nutritionale per 100g;
+- `calories` poate fi `0` doar pentru apa / produse similare fara energie;
+- fara array JSON mare;
+- fara CSV direct in aplicatie;
+- recomandat: maximum 25.000 alimente pentru MVP;
+- campuri minime: `id`, `name`, `calories`, `protein`, `carbs`, `fat`;
+- campuri optionale recomandate: `brand`, `barcode`, `category`, `servingGrams`, `aliases`, `source`.
 
-## Link pentru IronVexel
-
-Dacă repo-ul este public, link-ul raw va fi:
+Raw URL:
 
 ```text
 https://raw.githubusercontent.com/Sergiu104/25.000/main/iv_food_catalog_ro.jsonl
 ```
 
-În aplicația IronVexel, setează în `local.properties`:
+## Catalog retete
 
-```properties
-FOOD_CATALOG_URL=https://raw.githubusercontent.com/Sergiu104/25.000/main/iv_food_catalog_ro.jsonl
+Fisier:
+
+```text
+iv_recipe_catalog_ro.jsonl
 ```
 
-## Atenție
+Format pe fiecare linie:
 
-Repo-ul trebuie să fie public pentru ca aplicația să poată descărca JSONL-ul fără login/token.
+```json
+{"id":"recipe-pui-orez-legume","name":"Pui cu orez si legume","servings":1,"ingredients":[{"foodId":"local-piept-pui","name":"Piept de pui","grams":150}],"instructions":["Gateste ingredientele."],"nutrition":{"calories":520,"protein":43,"carbs":58,"fat":10}}
+```
 
-Dacă repo-ul rămâne private, aplicația Android nu va putea folosi URL-ul raw simplu.
+Reguli:
 
-## Cum generezi catalogul
+- o reteta pe linie;
+- `ingredients` este array de ingrediente;
+- fiecare ingredient ar trebui sa aiba `foodId` cand exista alimentul in catalog;
+- `name` ramane fallback pentru cautare daca nu exista `foodId`;
+- `grams` reprezinta cantitatea folosita in reteta;
+- `nutrition` este per portie de reteta, nu per 100g;
+- campuri minime: `id`, `name`, `servings`, `ingredients`, `instructions`, `nutrition`;
+- campuri optionale recomandate: `tags`, `difficulty`, `prepMinutes`, `cookMinutes`, `source`.
+
+Raw URL:
+
+```text
+https://raw.githubusercontent.com/Sergiu104/25.000/main/iv_recipe_catalog_ro.jsonl
+```
+
+## Regula pentru Frigider Virtual
+
+Retetele trebuie gandite ca sa functioneze cu Frigiderul Virtual:
+
+1. aplicatia cauta ingredientele dupa `foodId`;
+2. daca nu gaseste `foodId`, cauta dupa `barcode` sau nume normalizat;
+3. daca utilizatorul consuma reteta, aplicatia scade ingredientele din frigider;
+4. reteta consumata se adauga in Food Log;
+5. Home Balance se actualizeaza din Food Log.
+
+## Cum generezi catalogul mare
 
 Din repo-ul principal IronVexel:
 
@@ -53,10 +121,26 @@ Din repo-ul principal IronVexel:
 python tools/import_food_catalog.py data/raw_foods.csv --output iv_food_catalog_ro.jsonl --limit 25000
 ```
 
-Sau, dacă vrei să păstrezi starter foods:
+Sau, daca vrei sa pastrezi starter foods:
 
 ```powershell
 python tools/import_food_catalog.py data/raw_foods.csv --append app/src/main/assets/food/iv_food_catalog_ro.jsonl --output iv_food_catalog_ro.jsonl --limit 25000
 ```
 
 Apoi pui `iv_food_catalog_ro.jsonl` aici.
+
+## Atentie
+
+Repo-ul trebuie sa fie public pentru ca aplicatia sa poata descarca fisierele raw fara login/token.
+
+Daca repo-ul devine private, aplicatia Android nu va putea folosi URL-urile raw simple.
+
+## Recomandare tehnica
+
+In aplicatie, importul trebuie sa fie defensiv:
+
+- daca fisierul remote este gol, pastreaza datele locale existente;
+- daca o linie JSONL este invalida, sari peste linie;
+- daca prea multe linii sunt invalide, opreste importul;
+- daca exista duplicate, pastreaza varianta locala sau cea mai completa;
+- cache local obligatoriu pentru folosire offline.
