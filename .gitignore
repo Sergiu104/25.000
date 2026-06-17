@@ -1,0 +1,24 @@
+# Local source data and exports
+*.db
+*.sqlite
+*.sqlite3
+*.jsonl.gz
+*.dump
+*.bak
+
+# Local secrets and machine config
+.env
+.env.*
+local.properties
+local.settings
+secrets.*
+token.txt
+*.token
+
+# Temporary work folders
+_local_backups/
+patch-backups/
+
+# OS files
+.DS_Store
+Thumbs.db
