@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "app": "IronVexel",
   "repository": "Sergiu104/25.000",
-  "updatedAt": "2026-05-24",
+  "updatedAt": "2026-06-17",
   "environment": "backup-public-catalog",
   "catalogs": {
     "foods": {
